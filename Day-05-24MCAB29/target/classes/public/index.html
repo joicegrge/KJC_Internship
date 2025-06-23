@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app-container dark-theme">
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-user-shield"></i>
+                <h1>EmpTrack Pro</h1>
+            </div>
+            <div class="header-actions">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="user-profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Admin</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="app-sidebar">
+        <nav>
+            <ul>
+                <li class="active">
+                    <a href="#" onclick="loadDashboard()">
+                        <i class="fas fa-chart-network"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showEmployeeSection()">
+                        <i class="fas fa-users-gear"></i>
+                        <span>Employees</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="showAnalytics()">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main">
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="dashboard-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-users-line"></i>
+                    <h3 id="totalEmployees">0</h3>
+                    <p>Total Employees</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-building-user"></i>
+                    <h3 id="totalDepartments">0</h3>
+                    <p>Departments</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-user-plus"></i>
+                    <h3 id="newHires">0</h3>
+                    <p>New Hires</p>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-code-branch"></i>
+                    <h3 id="activeProjects">0</h3>
+                    <p>Active Teams</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="toggleEmployeeTable()">
+                        <i class="fas fa-table-list"></i>
+                        <span>View Employees</span>
+                    </button>
+                    <button class="action-btn" onclick="toggleManageMode()">
+                        <i class="fas fa-user-pen"></i>
+                        <span>Manage Mode</span>
+                    </button>
+                    <button class="action-btn" onclick="showDeleteByEmail()">
+                        <i class="fas fa-user-xmark"></i>
+                        <span>Delete by Email</span>
+                    </button>
+                </div>
+                <div id="delete-email-container" class="hidden">
+                    <input type="email" id="email-to-delete" placeholder="Enter employee email">
+                    <button onclick="deleteByEmail()"><i class="fas fa-trash-can"></i> Delete</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Employee Management Section -->
+        <section id="employee-section" class="employee-section hidden">
+            <!-- Add Employee Form -->
+            <div class="form-card">
+                <h2><i class="fas fa-user-plus"></i> Add/Edit Employee</h2>
+                <form id="employee-form">
+                    <input type="hidden" id="employee-id">
+                    <div class="form-group">
+                        <label for="employee-name">
+                            <i class="fas fa-signature"></i>
+                            Full Name
+                        </label>
+                        <input type="text" id="employee-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee-email">
+                            <i class="fas fa-at"></i>
+                            Email
+                        </label>
+                        <input type="email" id="employee-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee-dept">
+                            <i class="fas fa-sitemap"></i>
+                            Department
+                        </label>
+                        <input type="text" id="employee-dept" list="dept-list" required>
+                        <datalist id="dept-list">
+                            <option value="Development">
+                            <option value="Marketing">
+                            <option value="HR">
+                            <option value="Finance">
+                            <option value="Operations">
+                            <option value="Design">
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee-skills">
+                            <i class="fas fa-laptop-code"></i>
+                            Skills
+                        </label>
+                        <input type="text" id="employee-skills" placeholder="Comma separated" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee-date">
+                            <i class="fas fa-calendar-days"></i>
+                            Joining Date
+                        </label>
+                        <input type="date" id="employee-date" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" id="submit-btn">
+                            <i class="fas fa-plus"></i> Add Employee
+                        </button>
+                        <button type="reset">
+                            <i class="fas fa-eraser"></i> Clear
+                        </button>
+                    </div>
+                </form>
+                <div id="form-message"></div>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="search-card">
+                <h2><i class="fas fa-magnifying-glass"></i> Search Employees</h2>
+                <div class="search-form">
+                    <div class="search-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-user"></i> Name</label>
+                            <input type="text" id="search-name" placeholder="Search by name">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-building"></i> Department</label>
+                            <input type="text" id="search-dept" placeholder="Search by department">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tools"></i> Skill</label>
+                            <input type="text" id="search-skill" placeholder="Search by skill">
+                        </div>
+                    </div>
+                    <div class="search-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> From Date</label>
+                            <input type="date" id="search-from">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar"></i> To Date</label>
+                            <input type="date" id="search-to">
+                        </div>
+                        <div class="form-actions">
+                            <button onclick="searchEmployees()">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <button onclick="resetSearch()">
+                                <i class="fas fa-rotate"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Table -->
+            <div class="table-card">
+                <h2><i class="fas fa-table"></i> Employee List</h2>
+                <div class="table-controls">
+                    <div>
+                        <label><i class="fas fa-sort"></i> Sort By:</label>
+                        <select id="sort-by" onchange="fetchPaginatedEmployees(1)">
+                            <option value="name">Name</option>
+                            <option value="joiningDate">Joining Date</option>
+                            <option value="department">Department</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="employee-table" class="hidden">
+                        <thead>
+                        <tr>
+                            <th><i class="fas fa-user"></i> Name</th>
+                            <th><i class="fas fa-envelope"></i> Email</th>
+                            <th><i class="fas fa-building"></i> Department</th>
+                            <th><i class="fas fa-code"></i> Skills</th>
+                            <th><i class="fas fa-calendar"></i> Joining Date</th>
+                            <th class="manage-col hidden"><i class="fas fa-gear"></i> Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <button onclick="prevPage()"><i class="fas fa-chevron-left"></i> Previous</button>
+                    <span id="page-info">Page 1 of 1</span>
+                    <button onclick="nextPage()">Next <i class="fas fa-chevron-right"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analytics Section -->
+        <section id="analytics-section" class="analytics-section hidden">
+            <div class="analytics-card">
+                <h2><i class="fas fa-chart-simple"></i> Employee Analytics</h2>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <canvas id="departmentChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="hiringTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loading-overlay" class="loading-overlay hidden">
+    <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Loading...</p>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
