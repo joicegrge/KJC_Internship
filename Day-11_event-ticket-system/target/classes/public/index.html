@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Event Ticket Token System</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    .events {
+      margin-top: 20px;
+    }
+
+    .event-card {
+      background: #e9f0f8;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+<h2>🎟️ Event Ticket Token System</h2>
+
+<div class="container">
+  <h3>Register</h3>
+  <input type="text" id="regName" placeholder="Name">
+  <input type="email" id="regEmail" placeholder="Email">
+  <button onclick="registerUser()">Register</button>
+</div>
+
+<div class="container">
+  <h3>Login</h3>
+  <input type="email" id="loginEmail" placeholder="Email">
+  <input type="password" id="loginPassword" placeholder="Password">
+  <button onclick="loginUser()">Login</button>
+</div>
+
+<div class="container">
+  <h3>Available Events</h3>
+  <button onclick="fetchEvents()">Load Events</button>
+  <div class="events" id="eventsList"></div>
+</div>
+
+<script>
+  function registerUser() {
+    const name = document.getElementById('regName').value;
+    const email = document.getElementById('regEmail').value;
+
+    fetch('http://localhost:8080/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email })
+    })
+    .then(res => {
+      if (res.ok) alert("✅ Registered successfully. Check your email!");
+      else alert("⚠️ Email already registered or error.");
+    });
+  }
+
+  function loginUser() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    fetch('http://localhost:8080/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        alert("✅ Login successful!");
+        sessionStorage.setItem("email", email);
+      } else {
+        alert("❌ Invalid email or password.");
+      }
+    });
+  }
+
+  function fetchEvents() {
+    fetch('http://localhost:8080/api/events')
+      .then(res => res.json())
+      .then(events => {
+        const list = document.getElementById('eventsList');
+        list.innerHTML = '';
+        events.forEach(event => {
+          const div = document.createElement('div');
+          div.className = 'event-card';
+          div.innerHTML = `
+            <strong>${event.title}</strong><br>
+            Date: ${event.date}<br>
+            Tokens Left: ${event.availableTokens}<br>
+            <button onclick="bookToken('${event.id}')">Book Token</button>
+          `;
+          list.appendChild(div);
+        });
+      });
+  }
+
+  function bookToken(eventId) {
+    const email = sessionStorage.getItem("email");
+    if (!email) {
+      alert("❗ Please login first");
+      return;
+    }
+
+    fetch('http://localhost:8080/api/book', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, eventId })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === "success") {
+        alert(`🎉 Booking confirmed!\nYour token: ${data.token}\n(Also sent to your email)`);
+        fetchEvents(); // refresh token count
+      } else {
+        alert("❌ Booking failed. No tokens left or invalid event.");
+      }
+    });
+  }
+</script>
+</body>
+</html>

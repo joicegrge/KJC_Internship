@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard | Event System</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    button.logout {
+      background: #3498db;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .section {
+      margin-top: 30px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    button {
+      padding: 6px 12px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #c0392b;
+    }
+
+    form input, form button {
+      padding: 8px;
+      margin-right: 10px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    form button {
+      background: #2ecc71;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    form button:hover {
+      background: #27ae60;
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h2>Admin Dashboard</h2>
+  <button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="section">
+  <h3>Users</h3>
+  <table id="usersTable">
+    <thead><tr><th>Name</th><th>Email</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>Events</h3>
+  <form id="addEventForm">
+    <input type="text" id="title" placeholder="Title" required />
+    <input type="date" id="date" required />
+    <input type="number" id="availableTokens" placeholder="Available Tokens" required />
+    <button type="submit">Add Event</button>
+  </form>
+
+  <table id="eventsTable">
+    <thead><tr><th>Title</th><th>Date</th><th>Tokens Left</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="section">
+  <h3>Bookings</h3>
+  <table id="bookingsTable">
+    <thead><tr><th>User Email</th><th>Event</th><th>Token</th><th>Date</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+  async function loadAdminData() {
+    const [users, events, bookings] = await Promise.all([
+      fetch('/api/admin/users').then(res => res.json()),
+      fetch('/api/admin/events').then(res => res.json()),
+      fetch('/api/admin/bookings').then(res => res.json())
+    ]);
+
+    const usersTable = document.querySelector('#usersTable tbody');
+    usersTable.innerHTML = '';
+    users.forEach(u => {
+      usersTable.innerHTML += `<tr>
+        <td>${u.name}</td><td>${u.email}</td>
+        <td><button onclick="deleteUser('${u.email}')">Delete</button></td>
+      </tr>`;
+    });
+
+    const eventsTable = document.querySelector('#eventsTable tbody');
+    eventsTable.innerHTML = '';
+    events.forEach(e => {
+      eventsTable.innerHTML += `<tr>
+        <td>${e.title}</td><td>${e.date}</td><td>${e.availableTokens}</td>
+        <td><button onclick="deleteEvent('${e.id}')">Delete</button></td>
+      </tr>`;
+    });
+
+    const bookingsTable = document.querySelector('#bookingsTable tbody');
+    bookingsTable.innerHTML = '';
+    bookings.forEach(b => {
+      bookingsTable.innerHTML += `<tr>
+        <td>${b.email}</td><td>${b.eventTitle}</td><td>${b.token}</td><td>${b.date}</td>
+      </tr>`;
+    });
+  }
+
+  function deleteUser(email) {
+    if (confirm(`Delete user ${email}?`)) {
+      fetch(`/api/admin/users?email=${email}`, { method: 'DELETE' })
+        .then(() => loadAdminData());
+    }
+  }
+
+  function deleteEvent(id) {
+    if (confirm(`Delete event?`)) {
+      fetch(`/api/admin/events?id=${id}`, { method: 'DELETE' })
+        .then(() => loadAdminData());
+    }
+  }
+
+  document.getElementById('addEventForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const title = document.getElementById('title').value;
+    const date = document.getElementById('date').value;
+    const availableTokens = document.getElementById('availableTokens').value;
+
+    await fetch('/api/admin/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, date, availableTokens })
+    });
+
+    this.reset();
+    loadAdminData();
+  });
+
+  function logout() {
+    window.location.href = "/register_login.html";
+  }
+
+  window.onload = loadAdminData;
+</script>
+
+</body>
+</html>

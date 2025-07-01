@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎟️ Welcome to Events</title>
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        min-height: 100vh;
+        background: linear-gradient(-45deg, #000000, #1a1a1a, #2d2d2d, #1e1e1e);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        color: white;
+        padding: 20px;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Floating particles animation */
+    .particles {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .particle {
+        position: absolute;
+        background: rgba(255, 255, 0, 0.1);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .particle:nth-child(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; }
+    .particle:nth-child(2) { left: 20%; animation-duration: 10s; animation-delay: 2s; }
+    .particle:nth-child(3) { left: 30%; animation-duration: 6s; animation-delay: 4s; }
+    .particle:nth-child(4) { left: 40%; animation-duration: 12s; animation-delay: 1s; }
+    .particle:nth-child(5) { left: 60%; animation-duration: 9s; animation-delay: 3s; }
+    .particle:nth-child(6) { left: 70%; animation-duration: 7s; animation-delay: 5s; }
+    .particle:nth-child(7) { left: 80%; animation-duration: 11s; animation-delay: 2.5s; }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(100vh) scale(0); }
+        50% { transform: translateY(-100px) scale(1); }
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        position: relative;
+        z-index: 10;
+        animation: slideInFromTop 0.8s ease-out;
+    }
+
+    @keyframes slideInFromTop {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .header h2 {
+        font-size: 2.5em;
+        font-weight: 300;
+        text-shadow: 0 0 20px rgba(255, 255, 0, 0.5);
+        background: linear-gradient(135deg, #ffff00, #cccc00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .logout-btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #ffff00 0%, #cccc00 100%);
+        color: #000000;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 0 15px rgba(255, 255, 0, 0.4);
+    }
+
+    .logout-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 255, 0, 0.3), 0 0 25px rgba(255, 255, 0, 0.6);
+        background: linear-gradient(135deg, #cccc00 0%, #ffff00 100%);
+    }
+
+    .container {
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(20px);
+        border: 2px solid #ffff00;
+        box-shadow: 0 0 20px rgba(255, 255, 0, 0.3), 0 0 40px rgba(255, 255, 0, 0.1);
+        border-radius: 20px;
+        padding: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 10;
+        animation: slideInFromBottom 0.8s ease-out;
+    }
+
+    @keyframes slideInFromBottom {
+        from {
+            opacity: 0;
+            transform: translateY(50px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .container h3 {
+        font-size: 1.8em;
+        margin-bottom: 25px;
+        text-align: center;
+        color: #ffff00;
+        text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+    }
+
+    .load-events-btn {
+        display: block;
+        margin: 0 auto 30px auto;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #ffff00 0%, #cccc00 100%);
+        color: #000000;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 0 15px rgba(255, 255, 0, 0.4);
+    }
+
+    .load-events-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(255, 255, 0, 0.3), 0 0 25px rgba(255, 255, 0, 0.6);
+        background: linear-gradient(135deg, #cccc00 0%, #ffff00 100%);
+    }
+
+    .events {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+
+    .event-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 0, 0.3);
+        border-radius: 15px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .event-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 0, 0.8);
+        box-shadow: 0 10px 30px rgba(255, 255, 0, 0.2);
+    }
+
+    .event-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 0, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+
+    .event-card:hover::before {
+        left: 100%;
+    }
+
+    .event-card strong {
+        color: #ffff00;
+        font-size: 1.3em;
+        display: block;
+        margin-bottom: 15px;
+        text-shadow: 0 0 5px rgba(255, 255, 0, 0.5);
+    }
+
+    .event-info {
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    .event-info div {
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .tokens-left {
+        color: #ffff00 !important;
+        font-weight: 600;
+    }
+
+    .book-btn {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ffff00 0%, #cccc00 100%);
+        color: #000000;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 0 10px rgba(255, 255, 0, 0.4);
+    }
+
+    .book-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 255, 0, 0.3), 0 0 20px rgba(255, 255, 0, 0.6);
+        background: linear-gradient(135deg, #cccc00 0%, #ffff00 100%);
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #ffff00;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 0, 0.3);
+        border-top: 3px solid #ffff00;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .no-events {
+        text-align: center;
+        padding: 40px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.1em;
+    }
+
+    .message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        font-weight: 600;
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .message.show {
+        transform: translateX(0);
+    }
+
+    .message.success {
+        background: rgba(46, 204, 113, 0.9);
+        color: white;
+        border: 1px solid #2ecc71;
+    }
+
+    .message.error {
+        background: rgba(231, 76, 60, 0.9);
+        color: white;
+        border: 1px solid #e74c3c;
+    }
+
+    @media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .header h2 {
+            font-size: 2em;
+        }
+
+        .container {
+            padding: 25px 20px;
+            margin: 0 10px;
+        }
+
+        .events {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+    }
+
+    /* Pulse animation for buttons */
+    .pulse {
+        animation: buttonPulse 2s infinite;
+    }
+
+    @keyframes buttonPulse {
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 255, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0); }
+    }
+  </style>
+</head>
+<body>
+<!-- Animated particles -->
+<div class="particles">
+  <div class="particle" style="width: 6px; height: 6px;"></div>
+  <div class="particle" style="width: 8px; height: 8px;"></div>
+  <div class="particle" style="width: 4px; height: 4px;"></div>
+  <div class="particle" style="width: 10px; height: 10px;"></div>
+  <div class="particle" style="width: 6px; height: 6px;"></div>
+  <div class="particle" style="width: 8px; height: 8px;"></div>
+  <div class="particle" style="width: 5px; height: 5px;"></div>
+</div>
+
+<div class="header">
+  <h2>🎟️ Welcome to Events</h2>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+  <h3>Available Events</h3>
+  <button class="load-events-btn" onclick="fetchEvents()">Load Events</button>
+  <div class="events" id="eventsList">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Click "Load Events" to view available events</p>
+    </div>
+  </div>
+</div>
+
+<!-- Message container for notifications -->
+<div class="message" id="messageContainer"></div>
+
+<script>
+  let isLoading = false;
+
+  function showMessage(message, type) {
+      const messageEl = document.getElementById('messageContainer');
+      messageEl.textContent = message;
+      messageEl.className = `message ${type} show`;
+
+      setTimeout(() => {
+          messageEl.classList.remove('show');
+      }, 4000);
+  }
+
+  function showLoading(show) {
+      const list = document.getElementById('eventsList');
+      if (show) {
+          list.innerHTML = `
+              <div class="loading">
+                  <div class="spinner"></div>
+                  <p>Loading events...</p>
+              </div>
+          `;
+      }
+  }
+
+  function fetchEvents() {
+      if (isLoading) return;
+
+      isLoading = true;
+      showLoading(true);
+
+      fetch('http://localhost:8080/api/events')
+          .then(res => res.json())
+          .then(events => {
+              const list = document.getElementById('eventsList');
+              list.innerHTML = '';
+
+              if (events.length === 0) {
+                  list.innerHTML = '<div class="no-events">No events available at the moment</div>';
+                  return;
+              }
+
+              events.forEach((event, index) => {
+                  const div = document.createElement('div');
+                  div.className = 'event-card';
+                  div.style.animationDelay = `${index * 0.1}s`;
+                  div.innerHTML = `
+                      <strong>${event.title}</strong>
+                      <div class="event-info">
+                          <div>📅 Date: ${event.date}</div>
+                          <div class="tokens-left">🎟️ Tokens Left: ${event.availableTokens}</div>
+                      </div>
+                      <button class="book-btn" onclick="bookToken('${event.id}')">Book Token</button>
+                  `;
+                  list.appendChild(div);
+              });
+
+              showMessage('Events loaded successfully!', 'success');
+          })
+          .catch(error => {
+              const list = document.getElementById('eventsList');
+              list.innerHTML = '<div class="no-events">Failed to load events. Please try again.</div>';
+              showMessage('Failed to load events', 'error');
+          })
+          .finally(() => {
+              isLoading = false;
+          });
+  }
+
+  function bookToken(eventId) {
+      const email = sessionStorage.getItem("email");
+      if (!email) {
+          showMessage("Please login first", "error");
+          return;
+      }
+
+      // Add pulse effect to button
+      const button = event.target;
+      button.classList.add('pulse');
+      button.disabled = true;
+      button.textContent = 'Booking...';
+
+      fetch('http://localhost:8080/api/book', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, eventId })
+      })
+      .then(res => res.json())
+      .then(data => {
+          if (data.status === "success") {
+              showMessage(`🎉 Token booked: ${data.token}`, "success");
+              fetchEvents(); // Refresh events to show updated token count
+          } else {
+              showMessage("❌ Booking failed. No tokens left or invalid event.", "error");
+          }
+      })
+      .catch(error => {
+          showMessage("❌ Network error. Please try again.", "error");
+      })
+      .finally(() => {
+          button.classList.remove('pulse');
+          button.disabled = false;
+          button.textContent = 'Book Token';
+      });
+  }
+
+  function logout() {
+      sessionStorage.clear();
+      window.location.href = "register_login.html";
+  }
+
+  // Auto-load events when page loads
+  window.onload = fetchEvents;
+
+  // Add hover effects to buttons
+  document.addEventListener('DOMContentLoaded', function() {
+      // Add smooth scroll behavior
+      document.documentElement.style.scrollBehavior = 'smooth';
+  });
+</script>
+</body>
+</html>

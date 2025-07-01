@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Ticket Token System</title>
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        height: 100vh;
+        overflow: hidden;
+        background: linear-gradient(-45deg, #000000, #1a1a1a, #2d2d2d, #1e1e1e);
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Floating particles animation */
+    .particles {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .particle {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    .particle:nth-child(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; }
+    .particle:nth-child(2) { left: 20%; animation-duration: 10s; animation-delay: 2s; }
+    .particle:nth-child(3) { left: 30%; animation-duration: 6s; animation-delay: 4s; }
+    .particle:nth-child(4) { left: 40%; animation-duration: 12s; animation-delay: 1s; }
+    .particle:nth-child(5) { left: 60%; animation-duration: 9s; animation-delay: 3s; }
+    .particle:nth-child(6) { left: 70%; animation-duration: 7s; animation-delay: 5s; }
+    .particle:nth-child(7) { left: 80%; animation-duration: 11s; animation-delay: 2.5s; }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(100vh) scale(0); }
+        50% { transform: translateY(-100px) scale(1); }
+    }
+
+    .main-container {
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(20px);
+        border: 2px solid #ffff00;
+        box-shadow: 0 0 20px rgba(255, 255, 0, 0.3), 0 0 40px rgba(255, 255, 0, 0.1);
+        border-radius: 20px;
+        padding: 40px;
+        width: 400px;
+        max-width: 90vw;
+        z-index: 10;
+        position: relative;
+        animation: slideIn 0.8s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(50px) scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .header h1 {
+        color: white;
+        font-size: 2.2em;
+        font-weight: 300;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .header p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9em;
+    }
+
+    .tab-container {
+        display: flex;
+        margin-bottom: 30px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 15px;
+        padding: 5px;
+        position: relative;
+        border: 1px solid rgba(255, 255, 0, 0.3);
+    }
+
+    .tab {
+        flex: 1;
+        padding: 12px 20px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        position: relative;
+        z-index: 2;
+    }
+
+    .tab.active {
+        color: white;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .tab-indicator {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        width: calc(50% - 5px);
+        height: calc(100% - 10px);
+        background: rgba(255, 255, 0, 0.2);
+        border: 1px solid rgba(255, 255, 0, 0.5);
+        border-radius: 12px;
+        transition: transform 0.3s ease;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 0 10px rgba(255, 255, 0, 0.3);
+    }
+
+    .tab-indicator.login {
+        transform: translateX(100%);
+    }
+
+    .form-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form {
+        transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    .form.hidden {
+        transform: translateX(100%);
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+
+    .input-group {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 15px 20px;
+        border: none;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .input-group input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .input-group input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.02);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #ffff00 0%, #cccc00 100%);
+        color: #000000;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 0 15px rgba(255, 255, 0, 0.4);
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(255, 255, 0, 0.3), 0 0 25px rgba(255, 255, 0, 0.6);
+        background: linear-gradient(135deg, #cccc00 0%, #ffff00 100%);
+    }
+
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .loading {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .message {
+        padding: 12px;
+        border-radius: 8px;
+        margin-top: 15px;
+        text-align: center;
+        font-weight: 500;
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+    }
+
+    .message.show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .message.success {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border: 1px solid rgba(46, 204, 113, 0.3);
+    }
+
+    .message.error {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+
+    @media (max-width: 480px) {
+        .main-container {
+            padding: 30px 20px;
+            margin: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+        }
+    }
+
+    /* Pulse animation for interactive elements */
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 255, 0, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 255, 0, 0); }
+    }
+  </style>
+</head>
+<body>
+<!-- Animated particles -->
+<div class="particles">
+  <div class="particle" style="width: 6px; height: 6px;"></div>
+  <div class="particle" style="width: 8px; height: 8px;"></div>
+  <div class="particle" style="width: 4px; height: 4px;"></div>
+  <div class="particle" style="width: 10px; height: 10px;"></div>
+  <div class="particle" style="width: 6px; height: 6px;"></div>
+  <div class="particle" style="width: 8px; height: 8px;"></div>
+  <div class="particle" style="width: 5px; height: 5px;"></div>
+</div>
+
+<div class="main-container">
+  <div class="header">
+    <h1>🎟️ Event Tickets</h1>
+    <p>Your gateway to amazing experiences</p>
+  </div>
+
+  <div class="tab-container">
+    <div class="tab-indicator" id="tabIndicator"></div>
+    <div class="tab active" id="registerTab" onclick="switchTab('register')">Register</div>
+    <div class="tab" id="loginTab" onclick="switchTab('login')">Login</div>
+  </div>
+
+  <div class="form-container">
+    <!-- Register Form -->
+    <div class="form" id="registerForm">
+      <div class="input-group">
+        <input type="text" id="regName" placeholder="Full Name" required>
+      </div>
+      <div class="input-group">
+        <input type="email" id="regEmail" placeholder="Email Address" required>
+      </div>
+      <button class="submit-btn" onclick="registerUser()">Create Account</button>
+      <div class="loading" id="registerLoading">
+        <div class="spinner"></div>
+        <span>Creating your account...</span>
+      </div>
+      <div class="message" id="registerMessage"></div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="form hidden" id="loginForm">
+      <div class="input-group">
+        <input type="email" id="loginEmail" placeholder="Email Address" required>
+      </div>
+      <div class="input-group">
+        <input type="password" id="loginPassword" placeholder="Password" required>
+      </div>
+      <button class="submit-btn" onclick="loginUser()">Sign In</button>
+      <div class="loading" id="loginLoading">
+        <div class="spinner"></div>
+        <span>Signing you in...</span>
+      </div>
+      <div class="message" id="loginMessage"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentTab = 'register';
+
+  function switchTab(tab) {
+      if (currentTab === tab) return;
+
+      const registerTab = document.getElementById('registerTab');
+      const loginTab = document.getElementById('loginTab');
+      const registerForm = document.getElementById('registerForm');
+      const loginForm = document.getElementById('loginForm');
+      const indicator = document.getElementById('tabIndicator');
+
+      // Clear any messages
+      clearMessages();
+
+      if (tab === 'login') {
+          registerTab.classList.remove('active');
+          loginTab.classList.add('active');
+          registerForm.classList.add('hidden');
+          loginForm.classList.remove('hidden');
+          indicator.classList.add('login');
+      } else {
+          loginTab.classList.remove('active');
+          registerTab.classList.add('active');
+          loginForm.classList.add('hidden');
+          registerForm.classList.remove('hidden');
+          indicator.classList.remove('login');
+      }
+
+      currentTab = tab;
+  }
+
+  function showMessage(elementId, message, type) {
+      const messageEl = document.getElementById(elementId);
+      messageEl.textContent = message;
+      messageEl.className = `message ${type} show`;
+
+      setTimeout(() => {
+          messageEl.classList.remove('show');
+      }, 5000);
+  }
+
+  function clearMessages() {
+      const messages = document.querySelectorAll('.message');
+      messages.forEach(msg => msg.classList.remove('show'));
+  }
+
+  function showLoading(elementId, show) {
+      const loadingEl = document.getElementById(elementId);
+      loadingEl.style.display = show ? 'block' : 'none';
+  }
+
+  function registerUser() {
+      const name = document.getElementById('regName').value.trim();
+      const email = document.getElementById('regEmail').value.trim();
+
+      if (!name || !email) {
+          showMessage('registerMessage', 'Please fill in all fields', 'error');
+          return;
+      }
+
+      if (!email.includes('@')) {
+          showMessage('registerMessage', 'Please enter a valid email address', 'error');
+          return;
+      }
+
+      showLoading('registerLoading', true);
+      clearMessages();
+
+      fetch('http://localhost:8080/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+      })
+      .then(res => {
+          showLoading('registerLoading', false);
+          if (res.ok) {
+              showMessage('registerMessage', '✅ Registration successful! Check your email.', 'success');
+              document.getElementById('regName').value = '';
+              document.getElementById('regEmail').value = '';
+          } else {
+              showMessage('registerMessage', '⚠️ Email already registered or server error.', 'error');
+          }
+      })
+      .catch(err => {
+          showLoading('registerLoading', false);
+          showMessage('registerMessage', '❌ Network error. Please try again.', 'error');
+      });
+  }
+
+  function loginUser() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+
+      if (!email || !password) {
+          showMessage('loginMessage', 'Please fill in all fields', 'error');
+          return;
+      }
+
+      showLoading('loginLoading', true);
+      clearMessages();
+
+      fetch('http://localhost:8080/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+          showLoading('loginLoading', false);
+        if (data.success) {
+    showMessage('loginMessage', '✅ Login successful! Redirecting...', 'success');
+    sessionStorage.setItem("email", email);
+
+   setTimeout(() => {
+          // Admin credentials check
+          if (email === "admin@domain.com" && password === "admin123") {
+            window.location.href = "admin_dashboard.html";
+          } else {
+            window.location.href = "events.html";
+          }
+        }, 1000);
+      } else {
+        showMessage('loginMessage', '❌ Invalid email or password', 'error');
+      }
+    })
+    .catch(err => {
+      showLoading('loginLoading', false);
+      showMessage('loginMessage', '❌ Network error. Please try again.', 'error');
+    });
+  }
+
+  // Add enter key support
+  document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+          if (currentTab === 'register') {
+              registerUser();
+          } else {
+              loginUser();
+          }
+      }
+  });
+
+  // Add focus animations
+  document.addEventListener('DOMContentLoaded', function() {
+      const inputs = document.querySelectorAll('input');
+      inputs.forEach(input => {
+          input.addEventListener('focus', function() {
+              this.parentElement.classList.add('pulse');
+          });
+          input.addEventListener('blur', function() {
+              this.parentElement.classList.remove('pulse');
+          });
+      });
+  });
+</script>
+</body>
+</html>
