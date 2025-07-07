@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Management System</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --gray-bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background-color: var(--gray-bg);
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+    }
+
+    .home-card {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+      color: var(--primary-dark);
+    }
+
+    .nav-links {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      padding: 0.7rem;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .nav-links a:hover {
+      background: var(--primary-dark);
+    }
+
+    .footer-note {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+<div class="home-card">
+  <h1>Welcome 👋</h1>
+  <p>Please choose an option below to get started.</p>
+
+  <div class="nav-links">
+    <a href="register.html">📝 Register</a>
+    <a href="login.html">🔐 Login</a>
+    <a href="reset-request.html">🔁 Reset Password</a>
+  </div>
+
+  <div class="footer-note">User Management System | Kristu Jayanti</div>
+</div>
+
+<script>
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  if (token) {
+    window.location.href = `reset-complete.html?token=${token}`;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login | Kristu Jayanti</title>
+  <style>
+    :root {
+      --primary: #007bff;
+      --primary-dark: #0056b3;
+      --gray-bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --text: #2c3e50;
+      --muted: #6c757d;
+      --danger: #e74c3c;
+      --success: #28a745;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    body {
+      background-color: var(--gray-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: var(--text);
+    }
+
+    .login-card {
+      background-color: var(--card-bg);
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .login-card h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: var(--primary-dark);
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.7rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      outline: none;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    button[type="submit"]:hover {
+      background-color: var(--primary-dark);
+    }
+
+    .message {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      text-align: center;
+    }
+
+    .message.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .message.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+
+    .nav-links {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+    }
+
+    .nav-links a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .nav-links {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="login-card">
+  <h2>Login</h2>
+  <form id="loginForm">
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" placeholder="Enter your email" required />
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="Enter your password" required />
+    </div>
+
+    <button type="submit">Login</button>
+  </form>
+
+  <div id="message" class="message" style="display: none;"></div>
+
+  <div class="nav-links">
+    <a href="index.html">🏠 Home</a>
+    <a href="register.html">📝 Register</a>
+    <a href="reset-request.html">🔑 Forgot Password?</a>
+  </div>
+</div>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const response = await fetch('http://localhost:8080/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      const messageDiv = document.getElementById('message');
+      messageDiv.style.display = 'block';
+
+      if (response.ok) {
+        localStorage.setItem('accessToken', data.tokens.accessToken);
+        localStorage.setItem('refreshToken', data.tokens.refreshToken);
+
+        messageDiv.className = 'message success';
+        messageDiv.textContent = 'Login successful! Redirecting...';
+
+        const role = getUserRole(data.tokens.accessToken);
+        setTimeout(() => {
+          window.location.href = role === 'admin' ? 'admindashboard.html' : 'dashboard.html';
+        }, 1500);
+      } else {
+        messageDiv.className = 'message error';
+        messageDiv.textContent = data.error || 'Login failed. Please try again.';
+        document.getElementById('password').value = '';
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      const messageDiv = document.getElementById('message');
+      messageDiv.style.display = 'block';
+      messageDiv.className = 'message error';
+      messageDiv.textContent = 'An error occurred during login.';
+    }
+  });
+
+  function getUserRole(token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role;
+    } catch (e) {
+      console.error("Failed to decode token:", e);
+      return null;
+    }
+  }
+</script>
+</body>
+</html>

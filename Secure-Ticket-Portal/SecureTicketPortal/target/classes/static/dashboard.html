@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User Dashboard | Kristu Jayanti</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    .user-profile {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+    .profile-row {
+      display: flex;
+      margin-bottom: 1rem;
+    }
+    .profile-label {
+      font-weight: bold;
+      min-width: 150px;
+      color: #555;
+    }
+    .profile-value {
+      color: #333;
+    }
+    .dashboard-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 2rem;
+    }
+    .action-card {
+      background: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    .action-card:hover {
+      transform: translateY(-5px);
+    }
+    .logout-btn {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .logout-btn:hover {
+      background-color: #c0392b;
+    }
+    .event-card button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      margin-top: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .event-card button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="dashboard-header">
+    <h1>Welcome to Your Dashboard</h1>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
+  </div>
+
+  <div class="user-profile">
+    <h2>User Profile</h2>
+    <div class="profile-row">
+      <div class="profile-label">Email:</div>
+      <div class="profile-value" id="userEmail">Loading...</div>
+    </div>
+    <div class="profile-row">
+      <div class="profile-label">Account Status:</div>
+      <div class="profile-value" id="accountStatus">Active</div>
+    </div>
+
+    <div class="profile-row">
+      <div class="profile-label">Quick Actions:</div>
+      <div class="profile-value">
+        <a href="mybookings.html" style="color: #3498db; text-decoration: none; font-weight: bold;">
+          View My Bookings & Tokens
+        </a>
+      </div>
+    </div>
+    <div class="profile-row">
+      <div class="profile-label">Last Login:</div>
+      <div class="profile-value" id="lastLogin">Just now</div>
+    </div>
+  </div>
+
+  <div class="dashboard-actions">
+    <div class="action-card">
+      <h3>Upcoming Events</h3>
+      <div id="eventList" style="margin-top: 1rem;"></div>
+      <div class="pagination" style="margin-top: 1rem; text-align: center;">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (!accessToken || !refreshToken) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    try {
+      const userData = await fetchUserData();
+      displayUserInfo(userData);
+      document.getElementById('lastLogin').textContent = new Date().toLocaleString();
+      fetchEvents(currentPage); // Load first page of events
+    } catch (error) {
+      console.error('Error:', error);
+      window.location.href = 'login.html';
+    }
+  });
+
+  function displayUserInfo(userData) {
+    document.getElementById('userEmail').textContent = userData.email;
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try {
+      await fetch('http://localhost:8080/api/logout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = 'login.html';
+    }
+  });
+
+  async function fetchUserData() {
+    const accessToken = localStorage.getItem('accessToken');
+    const response = await fetch('http://localhost:8080/api/user', {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+
+    if (response.ok) return await response.json();
+    if (response.status === 401) return await handleTokenRefresh();
+    throw new Error('Failed to fetch user data');
+  }
+
+  async function handleTokenRefresh() {
+    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshResponse = await fetch('http://localhost:8080/api/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken })
+    });
+
+    if (refreshResponse.ok) {
+      const data = await refreshResponse.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      return await fetchUserData();
+    } else {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = 'login.html';
+      throw new Error('Token refresh failed');
+    }
+  }
+
+  // =========================
+  // Event Listing (Paginated)
+  // =========================
+  let currentPage = 1;
+  const pageSize = 5;
+
+  async function fetchEvents(page) {
+    const token = localStorage.getItem("accessToken");
+    try {
+      const response = await fetch(`/api/events?page=${page}&size=${pageSize}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch events");
+
+      const data = await response.json();
+      renderEvents(data.events);
+      updatePagination(data.page, data.total);
+    } catch (err) {
+      console.error("Error fetching events:", err);
+    }
+  }
+
+  function renderEvents(events) {
+    const eventList = document.getElementById("eventList");
+    eventList.innerHTML = '';
+
+    if (events.length === 0) {
+      eventList.innerHTML = '<p>No upcoming events.</p>';
+      return;
+    }
+
+    events.forEach(event => {
+      const div = document.createElement("div");
+      div.className = "event-card";
+      div.style = "background: #f8f9fa; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;";
+      div.innerHTML = `
+        <h4>${event.name}</h4>
+        <p><strong>Date:</strong> ${event.dateTime}</p>
+        <p><strong>Location:</strong> ${event.location}</p>
+        <p><strong>Tokens:</strong> ${event.tokensAvailable} / ${event.tokenLimit}</p>
+        <p>${event.description}</p>
+        <button onclick="bookEvent('${event.id}')">Book Token</button>
+      `;
+      eventList.appendChild(div);
+    });
+  }
+
+  async function bookEvent(eventId) {
+    const token = localStorage.getItem("accessToken");
+    console.log("Booking Event ID:", eventId); // for debugging
+
+    try {
+      const response = await fetch('/api/book', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ eventId })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('✅ Booking successful! Token sent to your email.');
+        fetchEvents(currentPage); // Refresh events to update available count
+      } else {
+        alert('❌ Booking failed: ' + (result.error || 'Try again.'));
+      }
+    } catch (error) {
+      console.error("Booking error:", error);
+      alert("❌ An error occurred while booking.");
+    }
+  }
+
+  function updatePagination(page, total) {
+    currentPage = page;
+    document.getElementById("prevBtn").disabled = (page === 1);
+    document.getElementById("nextBtn").disabled = (page * pageSize >= total);
+  }
+
+  document.getElementById("prevBtn").addEventListener("click", () => {
+    if (currentPage > 1) fetchEvents(currentPage - 1);
+  });
+
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    fetchEvents(currentPage + 1);
+  });
+</script>
+</body>
+</html>
