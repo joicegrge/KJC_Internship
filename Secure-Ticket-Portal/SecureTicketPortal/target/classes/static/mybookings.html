@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Bookings | Kristu Jayanti</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .booking-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .booking-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .booking-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .booking-title {
+      color: #2c3e50;
+      margin-top: 0;
+    }
+    .booking-detail {
+      margin: 8px 0;
+    }
+    .token {
+      font-family: monospace;
+      background: #f8f9fa;
+      padding: 5px 10px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+    .back-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 20px;
+    }
+    .back-btn:hover {
+      background: #2980b9;
+    }
+    .no-bookings {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+<div class="booking-container">
+  <div class="booking-header">
+    <h1>My Bookings</h1>
+    <button id="logoutBtn" class="logout-btn">Logout</button>
+  </div>
+
+  <button onclick="window.location.href='dashboard.html'" class="back-btn">
+    ← Back to Dashboard
+  </button>
+
+  <div id="bookingsList">
+    <p>Loading your bookings...</p>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Load bookings
+    await loadBookings();
+
+    // Set up logout button
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.location.href = 'login.html';
+    });
+  });
+
+  async function loadBookings() {
+    try {
+      const response = await fetch('/api/bookings', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to load bookings');
+      }
+
+      const data = await response.json();
+      displayBookings(data.bookings);
+    } catch (error) {
+      console.error('Error:', error);
+      document.getElementById('bookingsList').innerHTML = `
+        <div class="booking-card">
+          <p>Error loading bookings: ${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  function displayBookings(bookings) {
+    const container = document.getElementById('bookingsList');
+
+    if (!bookings || bookings.length === 0) {
+        container.innerHTML = `
+            <div class="no-bookings">
+                <p>You haven't made any bookings yet.</p>
+                <p>Visit the dashboard to book events.</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '';
+    bookings.forEach(booking => {
+        // Safely handle dates
+        const bookingDate = booking.bookingDate ?
+            new Date(booking.bookingDate).toLocaleString() :
+            (booking.timestamp ? new Date(booking.timestamp).toLocaleString() : 'N/A');
+
+        const eventDate = booking.eventDate ?
+            new Date(booking.eventDate).toLocaleString() : 'N/A';
+
+        html += `
+            <div class="booking-card">
+                <h3 class="booking-title">${booking.eventName || 'Event'}</h3>
+                <div class="booking-detail"><strong>Event Date:</strong> ${eventDate}</div>
+                <div class="booking-detail"><strong>Location:</strong> ${booking.eventLocation || 'N/A'}</div>
+                <div class="booking-detail"><strong>Booking Date:</strong> ${bookingDate}</div>
+                <div class="booking-detail"><strong>Status:</strong> ${booking.status || 'Confirmed'}</div>
+                <div class="booking-detail">
+                    <strong>Your Token:</strong>
+                    <span class="token">${booking.token || 'N/A'}</span>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Registration</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+  <h1>Register New User</h1>
+
+  <form id="registerForm">
+    <div class="form-group">
+      <label for="name">Full Name:</label>
+      <input type="text" id="name" name="name" required>
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+    </div>
+
+    <button type="submit">Register</button>
+  </form>
+
+  <div id="message" class="message" style="display: none;"></div>
+
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="reset-request.html">Reset Password</a>
+  </div>
+</div>
+
+<script>
+  document.getElementById('registerForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+
+      try {
+          const response = await fetch('http://localhost:8080/api/register', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ name, email })
+          });
+
+          const data = await response.json();
+
+          const messageDiv = document.getElementById('message');
+          messageDiv.style.display = 'block';
+          messageDiv.textContent = data.message;
+
+          if (response.ok) {
+              messageDiv.className = 'message success';
+              document.getElementById('registerForm').reset();
+          } else {
+              messageDiv.className = 'message error';
+          }
+      } catch (error) {
+          console.error('Error:', error);
+          const messageDiv = document.getElementById('message');
+          messageDiv.style.display = 'block';
+          messageDiv.className = 'message error';
+          messageDiv.textContent = 'An error occurred during registration.';
+      }
+  });
+</script>
+</body>
+</html>

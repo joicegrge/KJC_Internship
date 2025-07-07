@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upcoming Events</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 20px;
+      background-color: #f8f9fa;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .event-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .event-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 16px;
+    }
+
+    .event-card h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+
+    .event-card p {
+      margin: 4px 0;
+    }
+
+    .pagination {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .pagination button {
+      padding: 8px 12px;
+      margin: 0 5px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .pagination button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+<h1>Upcoming Events</h1>
+<div class="event-list" id="eventList"></div>
+<div class="pagination">
+  <button id="prevBtn" disabled>Previous</button>
+  <button id="nextBtn">Next</button>
+</div>
+
+<script>
+  let currentPage = 1;
+  const pageSize = 5;
+
+  const eventList = document.getElementById('eventList');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+
+  async function fetchEvents(page) {
+    const response = await fetch(`/api/events?page=${page}&size=${pageSize}`);
+    const data = await response.json();
+    renderEvents(data.events);
+    updatePagination(data.page, data.total);
+  }
+
+  function renderEvents(events) {
+    eventList.innerHTML = '';
+    events.forEach(event => {
+      const div = document.createElement('div');
+      div.className = 'event-card';
+      div.innerHTML = `
+        <h2>${event.name}</h2>
+        <p><strong>Date:</strong> ${event.dateTime}</p>
+        <p><strong>Location:</strong> ${event.location}</p>
+        <p><strong>Available Tokens:</strong> ${event.tokensAvailable} / ${event.tokenLimit}</p>
+        <p><strong>Status:</strong> ${event.status}</p>
+        <p>${event.description}</p>
+      `;
+      eventList.appendChild(div);
+    });
+  }
+
+  function updatePagination(page, total) {
+    currentPage = page;
+    prevBtn.disabled = (page === 1);
+    nextBtn.disabled = (page * pageSize >= total);
+  }
+
+  prevBtn.onclick = () => {
+    if (currentPage > 1) {
+      fetchEvents(currentPage - 1);
+    }
+  };
+
+  nextBtn.onclick = () => {
+    fetchEvents(currentPage + 1);
+  };
+
+  fetchEvents(currentPage);
+</script>
+</body>
+</html>
